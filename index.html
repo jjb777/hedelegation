@@ -1,0 +1,75 @@
+<html>
+<head>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sscjs@latest/dist/ssc.min.js"></script>
+</head>
+<body>
+<h1>Simple he delegation explorer</h1>
+
+<label for="symbolText">symbol</label>
+<input type="text" id="symbolText" size="10"/>
+<label for="fromText">from</label>
+<input type="text" id="fromText" />
+<label for="toText">to</label>
+<input type="text" id="toText"/>
+<input type="button" id="updateButton" value="update" onclick="update()"/>
+<br/><br/>
+<div id="content"></div>
+<script>
+  const ssc = new SSC('https://api.hive-engine.com/rpc');
+
+  // update function
+  function update() {
+
+    var symbol = document.getElementById("symbolText").value;
+    var to = document.getElementById("toText").value;
+    var from = document.getElementById("fromText").value;
+
+    var params = {
+      symbol: symbol
+    }
+
+    if (to) {
+      params['to'] = to;
+    }
+    if (from) {
+      params['from'] = from;
+    }
+
+    ssc.find(
+    'tokens',
+    'delegations',
+    params, 1000, 0, [], (err, result) => {
+
+    var sum = 0.0;
+    var table = document.getElementById("content");
+    var content = "<table border='1' style='border: 1px solid black;white-space: nowrap' cellpadding='10' cellspacing='0'>";
+    content += '<thead><td>from</td><td>to</td><td>quantity ('+symbol+')</td></thead>';
+
+    result.forEach(function (item, index) {
+      var quantity = parseFloat(item.quantity);
+      var formattedQuantity = quantity.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+      content += '<tr><td>@'+ item.from+'</td><td>@'+ item.to+'</td><td align="right">'+formattedQuantity+'</td></tr>';
+      sum += quantity;
+      //console.log(item, index);
+    });
+
+    var formattedSum = sum.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+    content += '<tfoot><td></td><td></td><td align="right">'+formattedSum+'</td></tfoot>';
+
+    content += '</table>';
+    table.innerHTML = content;
+
+    console.log(err, result);
+    });
+  }
+
+  // init values
+  document.getElementById("fromText").value = 'onealfa';
+  document.getElementById("toText").value = '';
+  document.getElementById("symbolText").value = 'LEO';
+
+  update();
+</script>
+</body>
+</html>
